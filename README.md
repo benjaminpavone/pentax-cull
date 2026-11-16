@@ -1,5 +1,7 @@
 # pentax-cull
 
+[![tests](https://github.com/benjaminpavone/pentax-cull/actions/workflows/tests.yml/badge.svg)](https://github.com/benjaminpavone/pentax-cull/actions/workflows/tests.yml)
+
 Rate your Pentax photos straight from the camera (Wi-Fi, phone or Mac) or from the memory card, and find the
 ratings in Lightroom Classic. Built and tested with a PENTAX K-1 Mark II.
 
@@ -12,6 +14,11 @@ ratings in Lightroom Classic. Built and tested with a PENTAX K-1 Mark II.
 
 Why the card reader for the real culling: over Wi-Fi the camera only serves a 720x480 preview (too soft to judge
 sharpness) or the whole 45 MB file (about 1 min). See `docs/api.md`.
+
+> **Status**: a personal project, tested with one camera (K-1 Mark II), one phone (Pixel 7 Pro, Android 17) and
+> Lightroom Classic on macOS 13. Not affiliated with or endorsed by Ricoh Imaging or Adobe; the camera's Wi-Fi API is
+> unofficial (see `docs/api.md`). Ratings are written into your DNG files: the code never moves existing data and
+> is tested for it, but **keep a backup of your photos**, as with any tool that edits them.
 
 ## Packages
 | Folder | Role |
@@ -45,6 +52,7 @@ Needs a JDK 17+ and the Android SDK (command-line tools, a platform and build-to
 packages/android/build.sh            # -> packages/android/build/pentax-cull.apk
 packages/android/build.sh install    # installs and starts it on a phone connected with USB debugging
 ```
+No prebuilt APK is published: build it yourself (it is signed with your own debug key).
 In the app: ⚙ Settings → camera Wi-Fi name and password, then Connect.
 
 ## Lightroom plugin
@@ -69,7 +77,7 @@ The tests build small synthetic DNG files laid out like the K-1 II ones (`tests/
 - `test_download.py`: two different photos with the same file name are both copied (NAME-2.DNG);
 - `test_lightroom.py`: the Lightroom plugin, run with LuaJIT against a stand-in of the Lightroom SDK (skipped
   without luajit).
-The white-band test needs macOS (`sips`); it is skipped elsewhere.
+The white-band tests need macOS (`sips`); they are skipped elsewhere. CI runs everything on Linux and macOS.
 
 
 ## License

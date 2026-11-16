@@ -1,5 +1,5 @@
 # Tests and lint on every push and pull request.
-# Linux for now (cheap on a private repo); the white-band test needs macOS `sips` and is skipped here.
+# Linux and macOS (the white-band tests need macOS `sips`; they are skipped on Linux).
 name: tests
 
 on:
@@ -11,7 +11,11 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
       # actions pinned to a commit (tag in the comment) so a moved tag cannot change what runs
@@ -28,7 +32,9 @@ jobs:
           distribution: temurin
           java-version: "21"           # Dng.java parity test (runs a single source file: 11+)
       - name: Install LuaJIT (Lightroom plugin tests)
-        run: sudo apt-get update -q && sudo apt-get install -y -q luajit
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then brew install luajit
+          else sudo apt-get update -q && sudo apt-get install -y -q luajit; fi
       - name: Install Python tools
         run: python -m pip install -r requirements-dev.txt
       - name: Ruff
