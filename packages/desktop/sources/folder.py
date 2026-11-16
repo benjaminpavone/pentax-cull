@@ -249,7 +249,11 @@ def _read_cached(path):
 
 
 def _sips(args):
-    r = subprocess.run(["sips", *args], capture_output=True, timeout=60)
+    """False if sips failed or is missing (not macOS): no screen preview, no white-band detection."""
+    try:
+        r = subprocess.run(["sips", *args], capture_output=True, timeout=60)
+    except FileNotFoundError:
+        return False
     return r.returncode == 0
 
 

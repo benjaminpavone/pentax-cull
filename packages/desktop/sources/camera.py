@@ -13,7 +13,11 @@ MAX_CONCURRENT = 2
 
 
 def _run(cmd, timeout=60):
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    """Output of a command; "" if it does not exist (networksetup: macOS only, the server still starts)."""
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        return ""
     return (r.stdout + r.stderr).strip()
 
 
