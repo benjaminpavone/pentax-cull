@@ -71,3 +71,7 @@ The tests build small synthetic DNG files laid out like the K-1 II ones (`tests/
   without luajit).
 The white-band test needs macOS (`sips`); it is skipped elsewhere.
 
+
+## License
+
+[MIT](LICENSE)
