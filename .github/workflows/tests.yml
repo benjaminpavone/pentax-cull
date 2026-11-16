@@ -1,0 +1,39 @@
+# Tests and lint on every push and pull request.
+# Linux for now (cheap on a private repo); the white-band test needs macOS `sips` and is skipped here.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # actions pinned to a commit (tag in the comment) so a moved tag cannot change what runs
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880  # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "21"           # Dng.java parity test (runs a single source file: 11+)
+      - name: Install LuaJIT (Lightroom plugin tests)
+        run: sudo apt-get update -q && sudo apt-get install -y -q luajit
+      - name: Install Python tools
+        run: python -m pip install -r requirements-dev.txt
+      - name: Ruff
+        run: ruff check .
+      - name: Tests
+        run: python -m pytest -rs
+      - name: Audit dev dependencies
+        run: pip-audit -r requirements-dev.txt
