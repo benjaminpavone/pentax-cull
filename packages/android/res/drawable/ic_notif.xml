@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status bar icon: the star of the app icon, white (Android tints it). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF" android:pathData="M54,22 L62.8,45.4 L87.8,46.6 L68.3,62.2 L74.9,86.3 L54,72.6 L33.1,86.3 L39.7,62.2 L20.2,46.6 L45.2,45.4 Z" />
+</vector>

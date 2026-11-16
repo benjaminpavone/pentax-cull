@@ -1,0 +1,12 @@
+# conda env create -f environment.yml && conda activate pentax-cull
+# The app uses the Python standard library only; pip installs the dev / QA tools (tests, lint, audit).
+name: pentax-cull
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.14.10
+  - luajit   # tests only: runs the Lightroom plugin (Lua 5.1) in tests/test_lightroom.py
+  - pip
+  - pip:
+      - -r requirements-dev.txt

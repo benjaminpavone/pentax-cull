@@ -1,0 +1,21 @@
+# Tooling configuration only (the app is not a Python package: run packages/desktop/server.py).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["packages/desktop"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+extend-exclude = ["packages/android/build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "S"]
+ignore = [
+    "E402",   # server.py imports its modules after setting sys.path
+    "S603", "S607",   # subprocess on fixed macOS tools (sips, osascript, networksetup, open)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S310"]   # assert; urllib on the local test server

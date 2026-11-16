@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pentax Cull</string>
+    <string name="dl_channel">Photo copies</string>
+    <string name="dl_title">Copying photos to the phone</string>
+    <string name="dl_title_done">Copy finished</string>
+    <string name="dl_starting">Starting…</string>
+    <string name="dl_cancel">Cancel</string>
+    <string name="dl_progress">%1$d/%2$d · %3$s · %4$d%%</string>
+    <string name="dl_done">%1$d copied, %2$d already there, %3$d failed</string>
+    <string name="dl_cancelled">Copy cancelled</string>
+</resources>

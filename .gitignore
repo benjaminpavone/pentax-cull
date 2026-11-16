@@ -1,0 +1,12 @@
+.env
+probe_results/
+ratings.json
+.DS_Store
+__pycache__/
+backups/
+packages/android/build/
+settings.json
+notes.md
+.pytest_cache/
+.ruff_cache/
+tests/.cache-tests/

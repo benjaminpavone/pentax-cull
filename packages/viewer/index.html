@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pentax Cull</title>
+<style>
+  :root, :root[data-theme="dark"] {
+    --bg: #111; --panel: #1b1b1b; --line: #2a2a2a; --text: #e8e8e8; --muted: #8a8a8a;
+    --accent: #f5b301; --on-accent: #111; --ok: #3fb950; --bad: #e5534b;
+    --ctl: #2a2a2a; --ctl-hover: #333; --ctl-line: #3a3a3a; --star-off: #444; --star-file: #b58a12;
+    --nav: rgba(255,255,255,.55); --shadow: rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #ececec; --panel: #fafafa; --line: #d6d6d6; --text: #1c1c1c; --muted: #666;
+    --accent: #d99a00; --on-accent: #fff; --ok: #1f883d; --bad: #cf222e;
+    --ctl: #fff; --ctl-hover: #f0f0f0; --ctl-line: #c8c8c8; --star-off: #c9c9c9; --star-file: #a87700;
+    --nav: rgba(0,0,0,.45); --shadow: rgba(0,0,0,.18);
+    color-scheme: light;
+  }
+  :root { --photo-bg: var(--bg); }
+  :root[data-bg="black"] { --photo-bg: #000; }
+  :root[data-bg="grey"] { --photo-bg: #777; }
+  :root[data-bg="white"] { --photo-bg: #fff; }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header, footer { display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+    background: var(--panel); flex-wrap: wrap; }
+  header { border-bottom: 1px solid var(--line); }
+  footer { border-top: 1px solid var(--line); flex-direction: column; gap: 6px; }
+  .grow { flex: 1; }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+  .group { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); flex: none; }
+  .dot.on { background: var(--ok); }
+  button, select { background: var(--ctl); color: var(--text); border: 1px solid var(--ctl-line);
+    border-radius: 6px; padding: 6px 12px; font: inherit; cursor: pointer; }
+  button:hover:not(:disabled) { background: var(--ctl-hover); }
+  button:disabled { opacity: .5; cursor: default; }
+  button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled), .seg button.active:hover:not(:disabled) {
+    background: var(--accent); filter: brightness(1.12); }
+  button.icon { padding: 6px 10px; }
+  .seg { display: inline-flex; border: 1px solid var(--ctl-line); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; }
+  .seg button.active { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+  #folderPath { max-width: 32vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+  label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+
+  #dlBar { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  #dlBar progress { width: 120px; accent-color: var(--accent); }
+
+  main { flex: 1; position: relative; min-height: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--photo-bg); transition: background .2s; }
+  #photo { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  #msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 16px; pointer-events: none; z-index: 3; }
+  #msgBox { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,.78); color: #fff;
+    padding: 10px 18px; border-radius: 999px; font-size: 15px; text-align: center; max-width: 90%;
+    box-shadow: 0 2px 12px rgba(0,0,0,.5); }
+  #msg .spin { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #f5b301; border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+  #msg.busy .spin { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  body.loading #photo { opacity: .35; transition: opacity .15s; }
+  body.can-zoom #photo { cursor: zoom-in; }
+  #grid { position: absolute; inset: 0; overflow-y: auto; z-index: 2; background: var(--photo-bg);
+    display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); grid-auto-rows: max-content; gap: 6px; padding: 6px; align-content: start; }
+  .tile { position: relative; aspect-ratio: 3 / 2; background: rgba(128,128,128,.12); border-radius: 4px;
+    cursor: pointer; outline: 3px solid transparent; outline-offset: -3px; }
+  .tile.sel { outline-color: var(--accent); }
+  .tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+  .tile img:not([src]) { visibility: hidden; }
+  .tile.err { background: rgba(229,83,75,.18); }
+  .tile .tst { position: absolute; left: 6px; bottom: 3px; font-size: 14px; color: var(--accent); text-shadow: 0 0 3px #000, 0 0 2px #000; }
+  .tile .tst.file { color: var(--star-file); }
+  .tile .tname { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: #fff; opacity: .75; text-shadow: 0 0 3px #000; }
+  #btnAuto.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+  button.icon.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  #zoom { position: absolute; inset: 0; overflow: hidden; background: var(--photo-bg); cursor: zoom-out; z-index: 2; }
+  #zoomInner { position: absolute; left: 0; top: 0; will-change: transform; }
+  #zoomLow { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #zoomInner .full { position: absolute; transform-origin: center center; max-width: none; }
+  .nav { position: absolute; top: 0; bottom: 0; width: 18%; cursor: pointer; display: flex;
+    align-items: center; font-size: 40px; color: transparent; user-select: none; }
+  .nav:hover { color: var(--nav); }
+  #prev { left: 0; padding-left: 16px; }
+  #next { right: 0; justify-content: flex-end; padding-right: 16px; }
+  #toast { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.8);
+    color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity .2s;
+    pointer-events: none; z-index: 4; }
+  #toast.show { opacity: 1; }
+  #toast.bad { color: #ff8a80; }
+  #stars { display: flex; gap: 4px; }
+  #stars span { font-size: 32px; cursor: pointer; color: var(--star-off); line-height: 1; padding: 0 2px; }
+  #stars span.on { color: var(--accent); }
+  #stars.from-file span.on { color: var(--star-file); }
+  .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .kbd { font-size: 12px; text-align: center; }
+  @media (pointer: coarse) { .kbd { display: none; } }        /* touch screens: no keyboard shortcuts */
+
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px; width: min(460px, calc(100vw - 32px)); box-shadow: 0 10px 40px var(--shadow); }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h2 { margin: 0 0 16px; font-size: 17px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .field > span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .field select, .field input { width: 100%; }
+  .field input { background: var(--ctl); color: var(--text); border: 1px solid var(--ctl-line); border-radius: 6px;
+    padding: 6px 10px; font: inherit; }
+  .androidOnly { display: none; }
+  body.android .androidOnly { display: block; }
+  body.android .desktopOnly { display: none; }
+  .cacheRow { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin: -6px 0 14px;
+              font-size: 13px; color: var(--muted); }
+  .destRow { display: flex; gap: 8px; align-items: center; }
+  .destRow code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl;
+    text-align: left; background: var(--ctl); border: 1px solid var(--ctl-line); border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+  .note { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; align-items: center; }
+  .actions .summary { margin-right: auto; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="seg" id="srcSeg">
+    <button data-src="camera" data-i18n="camera">Camera</button>
+    <button data-src="folder" data-i18n="folder">Folder</button>
+  </div>
+
+  <div class="group" id="camBox">
+    <span class="dot" id="dot"></span>
+    <span id="net" class="muted">…</span>
+    <button id="btnConn" data-i18n="connect">Connect</button>
+  </div>
+
+  <div class="group hidden" id="folderBox">
+    <span id="folderPath" class="muted"></span>
+    <button id="btnFolder" data-i18n="change">Change…</button>
+    <label data-i18n-title="writeFileTitle"><input type="checkbox" id="writeFile"> <span data-i18n="writeFile">write ratings into files</span></label>
+  </div>
+
+  <span class="grow"></span>
+  <div id="dlBar" class="hidden">
+    <span id="dlText"></span>
+    <progress id="dlProg" max="1" value="0"></progress>
+    <button id="dlCancel" data-i18n="cancel">Cancel</button>
+    <button id="dlReveal" class="hidden" data-i18n="reveal">Show in Finder</button>
+  </div>
+  <select id="groupSel" class="hidden" data-i18n-title="folderTitle"></select>
+  <span id="counter" class="muted"></span>
+  <button id="btnGrid" class="icon" data-i18n-title="gridTitle" aria-label="Grid">▦</button>
+  <button id="btnDownload" disabled>↓ <span data-i18n="download">Download</span></button>
+  <button id="btnSettings" class="icon" data-i18n-title="settings" aria-label="Settings">⚙</button>
+</header>
+
+<main>
+  <!-- auto tone: per-photo tone curve (display only, files are never changed) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="tone" color-interpolation-filters="sRGB">
+      <feComponentTransfer><feFuncR id="toneR" type="table"/><feFuncG id="toneG" type="table"/><feFuncB id="toneB" type="table"/></feComponentTransfer>
+    </filter>
+  </svg>
+  <img id="photo" alt="">
+  <div id="grid" class="hidden"></div>
+  <div id="zoom" class="hidden"><div id="zoomInner"><img id="zoomLow" alt=""></div></div>
+  <div id="msg"><div id="msgBox"><span class="spin"></span><span id="msgText"></span></div></div>
+  <div class="nav" id="prev">‹</div>
+  <div class="nav" id="next">›</div>
+  <div id="toast"></div>
+</main>
+
+<footer>
+  <div class="row">
+    <div id="stars"></div>
+    <button id="btnAuto" data-i18n="autoTone" data-i18n-title="autoToneTitle">Auto</button>
+    <label><input type="checkbox" id="autoAdv" checked> <span data-i18n="autoAdv">go to next photo after rating</span></label>
+  </div>
+  <div class="row muted">
+    <span id="fname"></span><span id="exif"></span><span id="timing"></span><span id="rated"></span>
+  </div>
+  <div class="muted kbd" data-i18n="shortcuts"></div>
+</footer>
+
+<dialog id="dlgSettings">
+  <h2 data-i18n="settings">Settings</h2>
+  <div class="androidOnly">
+    <label class="field"><span data-i18n="camSsid">Camera Wi-Fi name</span>
+      <input id="setSsid" placeholder="PENTAX_xxxxxx" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+    <label class="field"><span data-i18n="camPass">Camera Wi-Fi password</span>
+      <input id="setPass" type="password" autocomplete="off"></label>
+    <div class="field"><span data-i18n="ratingsTitle">Ratings</span>
+      <button id="btnExport" data-i18n="exportRatings">Export ratings…</button>
+      <p class="note" data-i18n="exportNote"></p>
+    </div>
+  </div>
+  <div class="field desktopOnly"><span data-i18n="inboxTitle">Ratings from the phone (inbox folder)</span>
+    <div class="destRow"><code id="inboxDir"></code><button id="inboxChange" data-i18n="change">Change…</button></div>
+    <p class="note" id="inboxStatus"></p>
+  </div>
+  <label class="field"><span data-i18n="language">Language</span>
+    <select id="setLang">
+      <option value="auto" data-i18n="auto">Automatic</option>
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+    </select>
+  </label>
+  <label class="field"><span data-i18n="theme">Theme</span>
+    <select id="setTheme">
+      <option value="dark" data-i18n="dark">Dark</option>
+      <option value="light" data-i18n="light">Light</option>
+    </select>
+  </label>
+  <label class="field"><span data-i18n="photoBg">Photo background</span>
+    <select id="setBg">
+      <option value="theme" data-i18n="bgTheme">Same as theme</option>
+      <option value="black" data-i18n="black">Black</option>
+      <option value="grey" data-i18n="grey">Grey</option>
+      <option value="white" data-i18n="white">White</option>
+    </select>
+  </label>
+  <label class="field desktopOnly"><span data-i18n="cache">Preview cache</span>
+    <select id="setCacheLimit">
+      <option value="536870912">500 MB</option>
+      <option value="1073741824">1 GB</option>
+      <option value="2147483648">2 GB</option>
+      <option value="5368709120">5 GB</option>
+      <option value="10737418240">10 GB</option>
+    </select>
+  </label>
+  <div class="cacheRow desktopOnly"><span id="cacheUsage"></span><button id="cacheClear" data-i18n="cacheClear">Clear cache</button></div>
+  <div class="actions"><button class="primary" id="setClose" data-i18n="close">Close</button></div>
+</dialog>
+
+<dialog id="dlgDownload">
+  <h2 id="dlTitle" data-i18n="downloadTitle">Download photos</h2>
+  <label class="field"><span data-i18n="photos">Photos</span>
+    <select id="dlFilter">
+      <option value="5" data-i18n="f5">5★ only</option>
+      <option value="4" data-i18n="f4">4★ and up</option>
+      <option value="3" data-i18n="f3">3★ and up</option>
+      <option value="1" data-i18n="f1">All rated photos</option>
+      <option value="cur" data-i18n="fcur">Current photo only</option>
+      <option value="all" data-i18n="fall">All photos in view</option>
+    </select>
+  </label>
+  <p class="note" id="dlScope"></p>
+  <div class="field"><span data-i18n="dest">Destination</span>
+    <div class="destRow"><code id="dlDest"></code><button id="dlChange" class="desktopOnly" data-i18n="change">Change…</button></div>
+  </div>
+  <label style="margin-bottom:14px"><input type="checkbox" id="dlWrite" checked> <span data-i18n="writeRating"></span></label>
+  <p class="note" id="dlCamNote" data-i18n="camNote"></p>
+  <div class="actions">
+    <span class="summary" id="dlCount"></span>
+    <button id="dlNo" data-i18n="cancel">Cancel</button>
+    <button class="primary" id="dlGo" data-i18n="start">Download</button>
+  </div>
+</dialog>
+
+<script src="i18n.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
